@@ -22,10 +22,12 @@ nrevss <- read.csv('./Data/Respiratory_Syncytial_Virus_Laboratory_Data__NREVSS_.
   mutate(t=row_number())%>%
   mutate(adj_pos_rsv_lag1=lag(adj_pos_rsv,1),
          adj_pos_rsv_lag2=lag(adj_pos_rsv,2),
-         rsv2 = adj_pos_rsv + 10 *cos(2*pi*t/52.1775 -pi) )%>%
+         rsv2 = adj_pos_rsv + 15+10 *cos(2*pi*t/52.1775 -pi) )%>%
   filter(!is.na(adj_pos_rsv_lag2) & !is.na(date))
 
-plot(nrevss$adj_pos_rsv)
+plot(nrevss$adj_pos_rsv, type='l')
+points(nrevss$rsv2, col='red', type='l')
+
 ```
 
 ```{r}
@@ -64,7 +66,7 @@ ds <- sim1 %>%
 
 mod1 <- glm( ACP ~ 1+ #adj_pos_rsv +
                rsv2 +
-               sin1 + cos1
+               sin1 + cos1 + sin2 +cos2 + sin3 + cos3
                ,data=ds, family=gaussian(link="identity")) 
 
 summary(mod1)
