@@ -1,0 +1,58 @@
+---
+title: "sim"
+author: "Dan Weinberger"
+date: '2023-07-28'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r}
+nrevss <- read.csv('./Data/Respiratory_Syncytial_Virus_Laboratory_Data__NREVSS_.csv') %>%
+  filter(Diagnostic.Test.Type=='PCR' & HHS.region==1) %>%
+  mutate(date=as.Date(Week.ending.Date, '%d%b%Y'),
+         test_mov= RcppRoll::roll_sum(RSV.Tests, 52, align = "right", fill = NA),
+         adj_pos_rsv=RSV.Detections/test_mov*52*100) %>%
+  filter(!is.na(adj_pos_rsv)) %>%
+  select(adj_pos_rsv,date) %>%
+  arrange(date) %>%
+  mutate(t=row_number())%>%
+  mutate(adj_pos_rsv_lag1=lag(adj_pos_rsv,1),
+         adj_pos_rsv_lag2=lag(adj_pos_rsv,2)) %>%
+  filter(!is.na(adj_pos_rsv_lag2) & !is.na(date))
+
+plot(nrevss$adj_pos_rsv)
+```
+
+```{r}
+set.seed(1234)
+sim1 <- nrevss %>%
+  mutate(ACP_mean = 30 + 
+           5*sin(2*pi*t/52.1775) + 10*sin(2*pi*t*2/52.1775) +
+            0.3*adj_pos_rsv + 0.6*adj_pos_rsv_lag1 + 0.1*adj_pos_rsv_lag2,
+         ACP=rpois(n(), ACP_mean))
+
+plot(sim1$t, sim1$ACP_mean)
+```
+
+
+```{r}
+
+ds <- sim1 %>%
+  mutate(sin1 = sin(2*pi*t/52.1775),
+         cos1 = cos(2*pi*t/52.1775),
+         
+         sin2 = sin(2*pi*t*2/52.1775),
+         cos2 = cos(2*pi*t*2/52.1775),
+         
+         sin3 = sin(2*pi*t*3/52.1775),
+         cos3 = cos(2*pi*t*3/52.1775),
+    )
+mod1 <- glm( ACP ~ 1+ adj_pos_rsv +adj_pos_rsv_lag1 +adj_pos_rsv_lag2+ sin1 + cos1 +sin2 +cos2  ,data=ds, family=gaussian(link="identity")) 
+
+summary(mod1)
+```
+
