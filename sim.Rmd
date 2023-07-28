@@ -66,7 +66,7 @@ ds <- sim1 %>%
 
 mod1 <- glm( ACP ~ 1+ #adj_pos_rsv +
                rsv2 +
-               sin1 + cos1 + sin2 +cos2 + sin3 + cos3
+               sin1 + cos1 + sin2 + cos2
                ,data=ds, family=gaussian(link="identity")) 
 
 summary(mod1)
