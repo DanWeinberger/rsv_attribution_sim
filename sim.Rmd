@@ -30,12 +30,14 @@ plot(nrevss$adj_pos_rsv)
 ```{r}
 set.seed(1234)
 sim1 <- nrevss %>%
-  mutate(ACP_mean = 30 + 
-           5*sin(2*pi*t/52.1775) + 10*sin(2*pi*t*2/52.1775) +
+  mutate(ACP_mean = 60 + 
+           10*sin(2*pi*t/52.1775-pi/2) + 5*sin(2*pi*t*2/52.1775-pi/2) +
             0.3*adj_pos_rsv + 0.6*adj_pos_rsv_lag1 + 0.1*adj_pos_rsv_lag2,
          ACP=rpois(n(), ACP_mean))
 
 plot(sim1$t, sim1$ACP_mean)
+
+sum(sim1$adj_pos_rsv)/sum(sim1$ACP_mean)
 ```
 
 
