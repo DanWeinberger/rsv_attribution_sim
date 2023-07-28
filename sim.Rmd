@@ -21,23 +21,24 @@ nrevss <- read.csv('./Data/Respiratory_Syncytial_Virus_Laboratory_Data__NREVSS_.
   arrange(date) %>%
   mutate(t=row_number())%>%
   mutate(adj_pos_rsv_lag1=lag(adj_pos_rsv,1),
-         adj_pos_rsv_lag2=lag(adj_pos_rsv,2)) %>%
+         adj_pos_rsv_lag2=lag(adj_pos_rsv,2),
+         rsv2 = adj_pos_rsv + 10 *cos(2*pi*t/52.1775 -pi) )%>%
   filter(!is.na(adj_pos_rsv_lag2) & !is.na(date))
 
 plot(nrevss$adj_pos_rsv)
 ```
 
 ```{r}
-set.seed(1234)
+set.seed(123)
 sim1 <- nrevss %>%
   mutate(ACP_mean = 60 + 
-           30*cos(2*pi*t/52.1775-pi) + 30*cos(2*pi*t*2/52.1775-pi) +
-            0.3*adj_pos_rsv + 0.6*adj_pos_rsv_lag1 + 0.1*adj_pos_rsv_lag2,
+           20*cos(2*pi*t/52.1775-pi) + 20*cos(2*pi*t*2/52.1775-pi) +
+            1.0*rsv2 ,
          ACP=rpois(n(), ACP_mean))
 
 plot(sim1$t, sim1$ACP_mean)
 
-sum(sim1$adj_pos_rsv)/sum(sim1$ACP_mean)
+sum(sim1$rsv2)/sum(sim1$ACP_mean)
 ```
 
 
@@ -51,22 +52,20 @@ ds <- sim1 %>%
          cos2 = cos(2*pi*t*2/52.1775),
          
          sin3 = sin(2*pi*t*3/52.1775),
-         cos3 = cos(2*pi*t*3/52.1775),
+         cos3 = cos(2*pi*t*3/52.1775)
     )
 
 
-mod0 <- glm( adj_pos_rsv_lag1 ~ 1+ #adj_pos_rsv +
-               sin1 + cos1  ,data=ds, family=gaussian(link="identity")) 
+# mod0 <- glm( adj_pos_rsv_lag1 ~ 1+ #adj_pos_rsv +
+#                sin1 + cos1  ,data=ds, family=gaussian(link="identity")) 
 
 #atan(-1*-9.2100/-9.82) in radian
 # -0.7535
 
 mod1 <- glm( ACP ~ 1+ #adj_pos_rsv +
-               adj_pos_rsv_lag1 +
-               #adj_pos_rsv_lag2+ 
-               sin1 + cos1  +
-               sin2 +cos2 +
-               sin3 + cos3,data=ds, family=gaussian(link="identity")) 
+               rsv2 +
+               sin1 + cos1
+               ,data=ds, family=gaussian(link="identity")) 
 
 summary(mod1)
 ```
