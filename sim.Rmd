@@ -31,7 +31,7 @@ plot(nrevss$adj_pos_rsv)
 set.seed(1234)
 sim1 <- nrevss %>%
   mutate(ACP_mean = 60 + 
-           10*sin(2*pi*t/52.1775-pi/2) + 5*sin(2*pi*t*2/52.1775-pi/2) +
+           30*cos(2*pi*t/52.1775-pi) + 30*cos(2*pi*t*2/52.1775-pi) +
             0.3*adj_pos_rsv + 0.6*adj_pos_rsv_lag1 + 0.1*adj_pos_rsv_lag2,
          ACP=rpois(n(), ACP_mean))
 
@@ -53,7 +53,20 @@ ds <- sim1 %>%
          sin3 = sin(2*pi*t*3/52.1775),
          cos3 = cos(2*pi*t*3/52.1775),
     )
-mod1 <- glm( ACP ~ 1+ adj_pos_rsv +adj_pos_rsv_lag1 +adj_pos_rsv_lag2+ sin1 + cos1 +sin2 +cos2  ,data=ds, family=gaussian(link="identity")) 
+
+
+mod0 <- glm( adj_pos_rsv_lag1 ~ 1+ #adj_pos_rsv +
+               sin1 + cos1  ,data=ds, family=gaussian(link="identity")) 
+
+#atan(-1*-9.2100/-9.82) in radian
+# -0.7535
+
+mod1 <- glm( ACP ~ 1+ #adj_pos_rsv +
+               adj_pos_rsv_lag1 +
+               #adj_pos_rsv_lag2+ 
+               sin1 + cos1  +
+               sin2 +cos2 +
+               sin3 + cos3,data=ds, family=gaussian(link="identity")) 
 
 summary(mod1)
 ```
